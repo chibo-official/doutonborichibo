@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>道頓堀ビル 統合分析 & 改善プロジェクト｜千房</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&family=Shippori+Mincho:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f7f6f2; --bg2:#ffffff; --bg3:#f0ede6; --border:#e4dfd5; --border2:#d0cbbf;
+  --text:#1a1815; --muted:#6b6560; --dim:#a09890;
+  --blue:#2563be; --blue-light:#dbeafe; --blue-mid:#93c5fd;
+  --green:#16794c; --green-light:#d1fae5;
+  --red:#c0392b; --red-light:#fde8e8;
+  --amber:#b45309; --amber-light:#fef3c7;
+  --eni:#8B0000; --eni-light:#f9f0f0; --eni-mid:#c0392b;
+  --gold:#C9A84C; --gold-light:#fdf8ee;
+  --font-head:'Shippori Mincho',Georgia,serif;
+  --font-body:'Noto Sans JP',sans-serif;
+  --font-mono:'DM Mono',monospace;
+  --radius:8px; --radius-lg:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.75;-webkit-font-smoothing:antialiased;}
+
+/* ── GLOBAL NAV ── */
+.global-nav{background:var(--eni);color:#fff;display:flex;align-items:stretch;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.gnav-brand{padding:0 24px;display:flex;align-items:center;font-family:var(--font-mono);font-size:12px;font-weight:500;letter-spacing:.05em;border-right:1px solid rgba(255,255,255,.15);white-space:nowrap;}
+.gnav-tabs{display:flex;flex:1;}
+.gnav-tab{padding:0 22px;height:48px;display:flex;align-items:center;font-size:12px;font-family:var(--font-mono);letter-spacing:.04em;color:rgba(255,255,255,.65);cursor:pointer;border:none;background:none;transition:color .15s,background .15s;white-space:nowrap;border-bottom:3px solid transparent;}
+.gnav-tab:hover{color:#fff;background:rgba(255,255,255,.08);}
+.gnav-tab.active{color:#fff;border-bottom-color:var(--gold);}
+.gnav-right{padding:0 20px;display:flex;align-items:center;margin-left:auto;}
+.gnav-badge{font-size:11px;font-family:var(--font-mono);background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px;color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.2);}
+
+/* ── PAGES ── */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ══════════════════════════════
+   ANALYSIS PAGE
+══════════════════════════════ */
+header.a-header{background:var(--bg2);border-bottom:2px solid var(--border);padding:48px 40px 40px;position:relative;overflow:hidden;}
+header.a-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#2563be 0%,#93c5fd 50%,#2563be 100%);}
+.header-eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;color:var(--blue);text-transform:uppercase;margin-bottom:12px;}
+.header-title{font-family:var(--font-head);font-size:clamp(24px,4vw,48px);font-weight:700;line-height:1.15;margin-bottom:8px;}
+.header-sub{font-size:13px;color:var(--muted);font-weight:300;margin-bottom:24px;max-width:680px;}
+.header-tags{display:flex;gap:10px;flex-wrap:wrap;}
+.tag{font-size:11px;padding:4px 12px;border-radius:20px;font-weight:500;font-family:var(--font-mono);}
+.tag.blue{background:var(--blue-light);color:var(--blue);}
+.tag.red{background:var(--red-light);color:var(--red);}
+.tag.amber{background:var(--amber-light);color:var(--amber);}
+
+.a-subnav{background:var(--bg2);border-bottom:1px solid var(--border);box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.a-subnav ul{display:flex;list-style:none;max-width:1100px;margin:0 auto;padding:0 40px;}
+.a-subnav li a{display:block;padding:12px 16px;font-size:12px;font-family:var(--font-mono);letter-spacing:.06em;color:var(--muted);text-decoration:none;transition:color .2s;}
+.a-subnav li a:hover{color:var(--blue);}
+
+.container{max-width:1100px;margin:0 auto;padding:0 40px;}
+section.a-sec{padding:56px 0;border-bottom:1px solid var(--border);}
+section.a-sec:last-child{border-bottom:none;}
+.section-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:var(--blue);text-transform:uppercase;margin-bottom:8px;}
+.section-title{font-family:var(--font-head);font-size:24px;font-weight:700;margin-bottom:6px;}
+.section-desc{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.7;max-width:720px;}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px;}
+.kpi-cell{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 22px;transition:box-shadow .2s;}
+.kpi-cell:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);}
+.kpi-cell.highlight{background:var(--blue-light);border-color:var(--blue-mid);}
+.kpi-cell.alert{border-left:4px solid var(--red);}
+.kpi-cell.positive{border-left:4px solid var(--blue);}
+.kpi-label{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.kpi-val{font-family:var(--font-mono);font-size:24px;font-weight:500;line-height:1;margin-bottom:6px;}
+.kpi-val.red{color:var(--red);}
+.kpi-val.blue{color:var(--blue);}
+.kpi-val.amber{color:var(--amber);}
+.kpi-note{font-size:11px;color:var(--dim);}
+
+.alert-box{background:var(--red-light);border:1px solid #f5c6c6;border-left:4px solid var(--red);border-radius:8px;padding:14px 18px;margin-bottom:22px;font-size:13px;color:var(--red);}
+.info-box{background:var(--blue-light);border:1px solid var(--blue-mid);border-left:4px solid var(--blue);border-radius:8px;padding:14px 18px;margin-bottom:22px;font-size:13px;color:var(--blue);}
+
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+@media(max-width:700px){.chart-grid-2{grid-template-columns:1fr;}}
+.chart-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
+.chart-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.chart-sub{font-size:11px;color:var(--dim);margin-bottom:10px;}
+.chart-wrap{position:relative;}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;}
+.legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.ld.circle{border-radius:50%;}
+.bubble-note{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--muted);margin-top:12px;line-height:1.7;}
+
+.season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px;}
+@media(max-width:700px){.season-grid{grid-template-columns:1fr 1fr;}}
+.season-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 16px;}
+.season-card.gold{background:var(--blue-light);border-color:var(--blue-mid);}
+.season-icon{font-size:18px;margin-bottom:6px;}
+.season-name{font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:500;}
+.season-val{font-family:var(--font-mono);font-size:20px;font-weight:500;margin-bottom:4px;}
+.season-note{font-size:11px;color:var(--dim);line-height:1.5;}
+
+.corr-list{display:flex;flex-direction:column;gap:7px;}
+.corr-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;}
+.corr-label{flex:1;font-size:12px;color:var(--muted);}
+.corr-bar-wrap{width:180px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.corr-bar{height:100%;border-radius:3px;}
+.corr-val{font-family:var(--font-mono);font-size:13px;font-weight:500;width:50px;text-align:right;}
+
+.施策-section-head{font-size:11px;font-family:var(--font-mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:26px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.施策-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px;margin-bottom:6px;}
+.施策-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;transition:box-shadow .2s,border-color .2s;}
+.施策-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);border-color:var(--blue-mid);}
+.施策-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.施策-num{font-family:var(--font-mono);font-size:10px;padding:3px 10px;border-radius:4px;white-space:nowrap;flex-shrink:0;font-weight:500;}
+.施策-num.blue{background:var(--blue-light);color:var(--blue);}
+.施策-num.green{background:var(--green-light);color:var(--green);}
+.施策-num.amber{background:var(--amber-light);color:var(--amber);}
+.施策-name{font-size:13px;font-weight:700;color:var(--text);}
+.施策-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+
+.fade-in{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease;}
+.fade-in.visible{opacity:1;transform:translateY(0);}
+
+/* ══════════════════════════════
+   PROJECT PAGE
+══════════════════════════════ */
+.proj-main{padding:28px 32px;max-width:1200px;margin:0 auto;}
+.sub-tab-nav{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px;}
+.sub-tab-btn{padding:11px 18px;font-size:13px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;font-family:var(--font-body);white-space:nowrap;}
+.sub-tab-btn:hover{color:var(--eni);}
+.sub-tab-btn.active{color:var(--eni);border-bottom-color:var(--eni);}
+.sub-pane{display:none;}
+.sub-pane.active{display:block;}
+
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.sum-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;}
+.sum-card .num{font-size:26px;font-weight:600;font-family:var(--font-mono);}
+.sum-card .lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.sum-card.s-go .num{color:var(--green);}
+.sum-card.s-nogo .num{color:var(--dim);}
+.sum-card.s-pending .num{color:var(--amber);}
+.sum-card.s-total .num{color:var(--eni);}
+
+.cat-section{margin-bottom:22px;}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:7px 14px;background:var(--eni-light);border-left:3px solid var(--eni);border-radius:0 var(--radius) var(--radius) 0;}
+.cat-label{font-size:12px;font-weight:600;color:var(--eni);}
+.cat-count{font-size:11px;color:var(--muted);margin-left:auto;}
+
+.action-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:8px;overflow:hidden;transition:box-shadow .15s;}
+.action-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.07);}
+.action-card.go{border-left:3px solid var(--green);}
+.action-card.nogo{border-left:3px solid var(--border2);opacity:.6;}
+.action-card.pending{border-left:3px solid var(--amber);}
+
+.card-top{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;cursor:pointer;}
+.card-num{font-size:11px;font-weight:700;color:var(--dim);min-width:22px;padding-top:2px;}
+.card-title-block{flex:1;}
+.card-title{font-size:14px;font-weight:500;line-height:1.5;}
+.card-desc{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.6;}
+.card-meta{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;align-items:center;}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:500;}
+.badge-imm{background:var(--blue-light);color:var(--blue);}
+.badge-med{background:var(--amber-light);color:var(--amber);}
+.badge-lng{background:#eff6ff;color:#1d4ed8;}
+
+.card-controls{display:flex;gap:7px;align-items:center;flex-shrink:0;}
+.status-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1.5px solid;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font-body);}
+.btn-go{border-color:var(--green);color:var(--green);background:#fff;}
+.btn-go.active,.btn-go:hover{background:var(--green);color:#fff;}
+.btn-nogo{border-color:var(--border2);color:var(--muted);background:#fff;}
+.btn-nogo.active,.btn-nogo:hover{background:var(--border2);color:#fff;}
+.expand-btn{font-size:15px;color:var(--dim);padding:4px 5px;cursor:pointer;transition:transform .2s;border:none;background:none;}
+.expand-btn.open{transform:rotate(180deg);}
+
+.card-detail{display:none;border-top:1px solid var(--border);padding:14px;background:#fbfaf9;}
+.card-detail.open{display:block;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.detail-field label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+.detail-field input,.detail-field select,.detail-field textarea{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font-body);background:#fff;color:var(--text);}
+.detail-field input:focus,.detail-field select:focus,.detail-field textarea:focus{outline:none;border-color:var(--eni);}
+.detail-field.full{grid-column:1/-1;}
+.detail-field textarea{min-height:54px;resize:vertical;}
+
+.add-section{background:#fff;border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:18px;margin-top:14px;}
+.add-section h3{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;}
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;}
+.add-grid .full{grid-column:1/-1;}
+.add-grid label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+.add-grid input,.add-grid select,.add-grid textarea{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font-body);background:#fff;color:var(--text);}
+.add-grid textarea{min-height:50px;resize:vertical;}
+.btn-primary{background:var(--eni);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+.btn-primary:hover{background:var(--eni-mid);}
+.btn-secondary{background:#fff;color:var(--text);border:1.5px solid var(--border2);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body);}
+.btn-secondary:hover{background:var(--bg3);}
+.btn-delete{font-size:11px;color:var(--red);background:none;border:1px solid currentColor;border-radius:4px;padding:2px 8px;cursor:pointer;margin-top:8px;}
+.btn-delete:hover{background:var(--red-light);}
+
+/* ── GANTT ── */
+.gantt-controls{display:flex;gap:12px;margin-bottom:14px;align-items:center;flex-wrap:wrap;}
+.gantt-controls label{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+.gantt-controls input[type=month],.gantt-controls select{padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:var(--font-body);}
+.gantt-legend{display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;}
+.g-leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.g-dot{width:12px;height:12px;border-radius:2px;}
+
+.gantt-wrapper{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow-x:auto;}
+.gantt-head-row{display:flex;background:var(--eni-light);border-bottom:1px solid var(--border);}
+.g-label-col{width:300px;min-width:300px;padding:9px 14px;font-size:11px;font-weight:700;color:var(--muted);border-right:1px solid var(--border);}
+.g-months{flex:1;display:flex;}
+.g-month{flex:1;min-width:55px;padding:9px 4px;font-size:11px;font-weight:600;text-align:center;color:var(--eni);border-right:1px solid var(--border);}
+.g-month:last-child{border-right:none;}
+
+.gantt-row{display:flex;border-bottom:1px solid var(--border);min-height:46px;align-items:center;}
+.gantt-row:last-child{border-bottom:none;}
+.gantt-row:hover{background:#fafaf8;}
+.g-task-label{width:300px;min-width:300px;padding:7px 14px;border-right:1px solid var(--border);}
+.g-task-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:270px;}
+.g-task-leader{font-size:11px;color:var(--muted);}
+.g-task-status{margin-top:2px;}
+
+.g-bar-area{flex:1;position:relative;height:46px;display:flex;align-items:center;}
+.g-bar{height:22px;border-radius:5px;position:absolute;display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+.g-bar.imm{background:var(--eni);}
+.g-bar.med{background:var(--amber);}
+.g-bar.lng{background:var(--blue);}
+.g-bar.done{background:var(--green)!important;opacity:.85;}
+.g-bar.hold{background:var(--dim)!important;opacity:.7;}
+.g-today{position:absolute;top:0;bottom:0;width:2px;background:var(--gold);opacity:.9;pointer-events:none;}
+.g-sec-head{background:#f3f0ed;padding:6px 14px;font-size:11px;font-weight:700;color:var(--eni);border-bottom:1px solid var(--border);}
+
+/* progress status badge */
+.prog-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;padding:1px 7px;border-radius:8px;}
+.prog-not-started{background:#f3f0ed;color:var(--dim);}
+.prog-in-progress{background:var(--blue-light);color:var(--blue);}
+.prog-done{background:var(--green-light);color:var(--green);}
+.prog-hold{background:#fff7ed;color:var(--amber);}
+
+/* ── MTG SUMMARY ── */
+.mtg-toolbar{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.mtg-mini-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
+.mtg-mini{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;text-align:center;}
+.mtg-mini .n{font-size:22px;font-weight:700;font-family:var(--font-mono);}
+.mtg-mini .l{font-size:11px;color:var(--muted);margin-top:1px;}
+.mtg-mini.mg .n{color:var(--green);}
+.mtg-mini.mn .n{color:var(--dim);}
+.mtg-mini.mp .n{color:var(--amber);}
+.mtg-mini.mt .n{color:var(--eni);}
+
+.mtg-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);}
+.mtg-table th{background:var(--eni);color:#fff;padding:9px 12px;font-size:12px;font-weight:600;text-align:left;}
+.mtg-table td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.mtg-table tr:last-child td{border-bottom:none;}
+.mtg-table tr:hover td{background:var(--eni-light);}
+
+/* MTG Minutes */
+.minutes-section{margin-top:28px;}
+.minutes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.minutes-header h3{font-size:14px;font-weight:700;color:var(--eni);}
+.minutes-list{display:flex;flex-direction:column;gap:14px;}
+.minute-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.minute-card-head{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--eni-light);cursor:pointer;}
+.minute-card-head:hover{background:#f5e8e8;}
+.minute-num{font-family:var(--font-mono);font-size:11px;background:var(--eni);color:#fff;padding:2px 8px;border-radius:4px;}
+.minute-date{font-size:13px;font-weight:600;color:var(--text);}
+.minute-title-text{font-size:13px;color:var(--muted);flex:1;}
+.minute-expand{font-size:14px;color:var(--dim);margin-left:auto;border:none;background:none;cursor:pointer;transition:transform .2s;padding:2px 4px;}
+.minute-expand.open{transform:rotate(180deg);}
+.minute-body{display:none;padding:16px;}
+.minute-body.open{display:block;}
+.minute-body-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.minute-field label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+.minute-field input,.minute-field select{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font-body);}
+.minute-field.full{grid-column:1/-1;}
+.minute-field textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font-body);resize:vertical;min-height:80px;}
+.minute-field input:focus,.minute-field select:focus,.minute-field textarea:focus{outline:none;border-color:var(--eni);}
+.minute-actions{display:flex;gap:8px;margin-top:8px;}
+.btn-minute-del{font-size:11px;color:var(--red);background:none;border:1px solid currentColor;border-radius:4px;padding:2px 8px;cursor:pointer;}
+.btn-minute-del:hover{background:var(--red-light);}
+
+.add-minute-form{background:#fff;border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:16px;margin-top:12px;}
+.add-minute-form h4{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:11px;}
+.am-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;}
+.am-grid .full{grid-column:1/-1;}
+.am-grid label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:3px;}
+.am-grid input,.am-grid select,.am-grid textarea{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font-body);}
+.am-grid textarea{min-height:60px;resize:vertical;}
+
+/* print */
+@media print{
+  .global-nav,.sub-tab-nav,.mtg-toolbar,.add-section,.add-minute-form,.expand-btn,.card-controls,.minute-expand,.minute-actions{display:none!important;}
+  .page{display:block!important;}
+  .sub-pane{display:block!important;}
+  .card-detail{display:block!important;}
+  .minute-body{display:block!important;}
+}
+@media(max-width:768px){
+  .proj-main{padding:14px;}
+  .summary-row,.mtg-mini-cards{grid-template-columns:repeat(2,1fr);}
+  .detail-grid{grid-template-columns:1fr;}
+  .minute-body-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ GLOBAL NAV ══ -->
+<div class="global-nav">
+  <div class="gnav-brand">千房 道頓堀ビル</div>
+  <div class="gnav-tabs">
+    <button class="gnav-tab active" onclick="showPage('analysis',this)">統合分析レポート</button>
+    <button class="gnav-tab" onclick="showPage('project',this)">改善プロジェクト管理</button>
+  </div>
+  <div class="gnav-right"><span class="gnav-badge" id="today-badge"></span></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE A: 統合分析レポート
+════════════════════════════════════════ -->
+<div class="page active" id="page-analysis">
+
+<header class="a-header">
+  <div class="container">
+    <div class="header-eyebrow">千房ホールディングス株式会社｜営業推進本部</div>
+    <h1 class="header-title">道頓堀ビル<br>統合分析レポート</h1>
+    <p class="header-sub">第21期〜第22期 P&L推移 ／ GBP×売上×通行者分析 ／ 改善施策提案<br>分析期間：2024年4月〜2026年4月（25ヶ月）</p>
+    <div class="header-tags">
+      <span class="tag blue">GBP経路案内 r=0.932</span>
+      <span class="tag amber">2024年12月 賃料+3,000千円/月</span>
+      <span class="tag red">2026年1〜4月 4ヶ月連続未達</span>
+    </div>
+  </div>
+</header>
+
+<div class="a-subnav">
+  <ul>
+    <li><a href="#impact">01 インパクト</a></li>
+    <li><a href="#trends">02 推移グラフ</a></li>
+    <li><a href="#gbp">03 GBP分析</a></li>
+    <li><a href="#actions">04 改善施策</a></li>
+  </ul>
+</div>
+
+<!-- 01 IMPACT -->
+<section class="a-sec" id="impact">
+  <div class="container fade-in">
+    <div class="section-label">01 — Impact Analysis</div>
+    <h2 class="section-title">4月実績インパクト</h2>
+    <p class="section-desc">第22期2026年4月単月。道頓堀ビル1店が全社売上の18.4%・営業利益の57.7%を担いながら、予算との乖離も全社最大。</p>
+    <div class="kpi-grid">
+      <div class="kpi-cell"><div class="kpi-label">全社 売上高</div><div class="kpi-val">266,246<span style="font-size:13px;color:var(--muted);">千円</span></div><div class="kpi-note">予算比 △9.4%</div></div>
+      <div class="kpi-cell highlight positive"><div class="kpi-label">道頓堀ビル 売上高</div><div class="kpi-val blue">48,898<span style="font-size:13px;color:var(--blue);">千円</span></div><div class="kpi-note">全社比 18.4% ／ 予算比 △14.2%</div></div>
+      <div class="kpi-cell highlight positive"><div class="kpi-label">道頓堀ビル 営業利益</div><div class="kpi-val blue">12,792<span style="font-size:13px;color:var(--blue);">千円</span></div><div class="kpi-note">全社比 57.7% ／ 予算比 △33.1%</div></div>
+      <div class="kpi-cell alert"><div class="kpi-label">道頓堀ビル 利益乖離</div><div class="kpi-val red">△6,337<span style="font-size:13px;color:var(--red);">千円</span></div><div class="kpi-note">全社乖離の 28.4% を占める</div></div>
+    </div>
+    <div class="chart-grid-2">
+      <div class="chart-box"><div class="chart-title">全店舗 営業利益比較（上位10店舗）</div><div class="chart-sub">4月実績（千円）</div><div class="legend"><span><span class="ld" style="background:#2563be;"></span>道頓堀ビル</span><span><span class="ld" style="background:#16794c;"></span>黒字</span><span><span class="ld" style="background:#c0392b;"></span>赤字</span></div><div class="chart-wrap" style="height:250px;"><canvas id="c1"></canvas></div></div>
+      <div class="chart-box"><div class="chart-title">予算対実績 乖離ランキング（営業利益）</div><div class="chart-sub">未達金額順（千円）</div><div class="legend"><span><span class="ld" style="background:#2563be;"></span>道頓堀ビル</span><span><span class="ld" style="background:#c0392b;"></span>未達</span><span><span class="ld" style="background:#16794c;"></span>超過</span></div><div class="chart-wrap" style="height:250px;"><canvas id="c2"></canvas></div></div>
+    </div>
+    <div class="chart-box"><div class="chart-title">全店舗 売上高 vs 営業利益（バブルサイズ＝売上高）</div><div class="chart-sub">道頓堀ビルが右上に孤立。バブルにカーソルで詳細表示。</div><div class="legend"><span><span class="ld circle" style="background:#2563be;"></span>道頓堀ビル</span><span><span class="ld circle" style="background:#16794c;"></span>黒字店舗</span><span><span class="ld circle" style="background:#c0392b;"></span>赤字店舗</span></div><div class="chart-wrap" style="height:360px;"><canvas id="cbubble"></canvas></div><div class="bubble-note">道頓堀ビル（青）の売上は次点・千日前本店（17,785千円）の約2.7倍。赤字店舗が生む損失を吸収しながら全社利益の半数以上を1店で支えている構図。予算未達が続く中でも圧倒的な利益貢献は変わらない。</div></div>
+  </div>
+</section>
+
+<!-- 02 TRENDS -->
+<section class="a-sec" id="trends" style="background:var(--bg3);">
+  <div class="container fade-in">
+    <div class="section-label">02 — P&L Trends</div>
+    <h2 class="section-title">損益推移（第21期4月〜第22期4月）</h2>
+    <p class="section-desc">25ヶ月分の月次P&Lデータ。オレンジ・赤系の区間は賃料値上げ後（2024年12月〜）を示す。</p>
+    <div class="alert-box">⚠️ 2024年12月より賃借料が 5,154千円 → 8,154千円へ値上げ（+3,000千円/月・+58%）。年間換算 36,000千円のコスト増加。青系＝値上げ前、オレンジ・赤系＝値上げ後。</div>
+    <div class="chart-grid-2" style="margin-bottom:18px;">
+      <div class="chart-box"><div class="chart-title">① 売上高推移</div><div class="chart-sub">青＝値上げ前 ／ オレンジ＝値上げ後（千円）</div><div class="chart-wrap" style="height:200px;"><canvas id="c3"></canvas></div></div>
+      <div class="chart-box"><div class="chart-title">② 営業利益推移</div><div class="chart-sub">値上げ後に平均水準が低下（千円）</div><div class="chart-wrap" style="height:200px;"><canvas id="c4"></canvas></div></div>
+    </div>
+    <div class="chart-grid-2" style="margin-bottom:18px;">
+      <div class="chart-box"><div class="chart-title">③ 売上原価推移</div><div class="chart-sub">棒＝原価（千円）／ 折れ線＝原価率%（右軸）</div><div class="chart-wrap" style="height:200px;"><canvas id="c5"></canvas></div></div>
+      <div class="chart-box"><div class="chart-title">④ 人件費推移</div><div class="chart-sub">棒＝人件費計（千円）／ 折れ線＝人件費率%（右軸）</div><div class="chart-wrap" style="height:200px;"><canvas id="c6"></canvas></div></div>
+    </div>
+    <div class="chart-box"><div class="chart-title">⑤ 賃借料 vs 営業利益（値上げインパクト）</div><div class="chart-sub">棒＝賃借料（左軸・千円）／ 折れ線＝営業利益（右軸・千円）</div><div class="legend"><span><span class="ld" style="background:#93c5fd;"></span>賃借料（値上げ前）</span><span><span class="ld" style="background:#f97316;"></span>賃借料（値上げ後）</span><span><span class="ld circle" style="background:#16794c;"></span>営業利益（右軸）</span></div><div class="chart-wrap" style="height:190px;"><canvas id="c7"></canvas></div></div>
+  </div>
+</section>
+
+<!-- 03 GBP -->
+<section class="a-sec" id="gbp">
+  <div class="container fade-in">
+    <div class="section-label">03 — GBP × Sales Analysis</div>
+    <h2 class="section-title">GBP×売上×通行者 統合分析</h2>
+    <p class="section-desc">分析期間：2025年5月〜2026年4月（12ヶ月）。GBP経路案内が売上の最強先行KPI（r=0.932）。客数減が2026年低迷の主因。</p>
+    <div class="kpi-grid">
+      <div class="kpi-cell positive"><div class="kpi-label">経路案内 × 客数 相関</div><div class="kpi-val blue">r = 0.932</div><div class="kpi-note">1件≒4.5〜5.2人来店（12ヶ月安定）</div></div>
+      <div class="kpi-cell"><div class="kpi-label">夏の転換率（最低期）</div><div class="kpi-val amber">12.9%</div><div class="kpi-note">冬23.8%との1.8倍差</div></div>
+      <div class="kpi-cell alert"><div class="kpi-label">4月転換率（12ヶ月最低）</div><div class="kpi-val red">1.76%</div><div class="kpi-note">平常値1.85〜2.15%を下回る</div></div>
+      <div class="kpi-cell alert"><div class="kpi-label">4月機会損失（経路案内低下）</div><div class="kpi-val red">△1,930万円</div><div class="kpi-note">ピーク比1,755件減→換算値</div></div>
+    </div>
+    <div class="season-grid">
+      <div class="season-card"><div class="season-icon">🌸</div><div class="season-name">春（3〜5月）</div><div class="season-val">54.6M</div><div class="season-note">転換率17.7%<br>経路案内5,004件</div></div>
+      <div class="season-card"><div class="season-icon">☀️</div><div class="season-name">夏（6〜8月）</div><div class="season-val">52.4M</div><div class="season-note">閲覧多・転換不全<br>転換率15.1%</div></div>
+      <div class="season-card gold"><div class="season-icon">🍂</div><div class="season-name" style="color:var(--blue);font-weight:700;">秋（9〜11月）★ 黄金期</div><div class="season-val" style="color:var(--blue);">59.6M</div><div class="season-note" style="color:var(--blue);">予算比107%<br>経路案内5,483件・全指標最高</div></div>
+      <div class="season-card"><div class="season-icon">❄️</div><div class="season-name">冬（12〜2月）</div><div class="season-val">50.8M</div><div class="season-note">転換率22.4%（最高）<br>閲覧少・転換最高</div></div>
+    </div>
+    <div class="chart-grid-2" style="margin-bottom:18px;">
+      <div class="chart-box"><div class="chart-title">月別 売上高 vs GBP経路案内（12ヶ月）</div><div class="chart-sub">棒＝売上高（左軸）／ 折れ線＝経路案内件数（右軸）</div><div class="chart-wrap" style="height:200px;"><canvas id="c8"></canvas></div></div>
+      <div class="chart-box"><div class="chart-title">月別 客数 & 客単価（12ヶ月）</div><div class="chart-sub">棒＝客数（左軸）／ 折れ線＝客単価円（右軸）</div><div class="chart-wrap" style="height:200px;"><canvas id="c9"></canvas></div></div>
+    </div>
+    <div class="chart-box"><div class="chart-title">全指標 × 売上・客数 相関ランキング</div><div class="chart-sub" style="margin-bottom:14px;">強い順。経路案内が群を抜いた先行KPI。戎橋周辺通行者は売上にほぼ無関係（r=0.356）。</div>
+      <div class="corr-list">
+        <div class="corr-row"><span class="corr-label">経路案内 × 客数</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:93.2%;background:#2563be;"></div></div><span class="corr-val" style="color:#2563be;">0.932</span></div>
+        <div class="corr-row"><span class="corr-label">経路案内 × 売上</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:92.6%;background:#2563be;"></div></div><span class="corr-val" style="color:#2563be;">0.926</span></div>
+        <div class="corr-row"><span class="corr-label">GBPアクション × 客数</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:87.8%;background:#16794c;"></div></div><span class="corr-val" style="color:#16794c;">0.878</span></div>
+        <div class="corr-row"><span class="corr-label">GBP閲覧合計 × 客数</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:79%;background:#16794c;"></div></div><span class="corr-val" style="color:#16794c;">0.790</span></div>
+        <div class="corr-row"><span class="corr-label">GBP閲覧合計 × 売上</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:77.1%;background:#16794c;"></div></div><span class="corr-val" style="color:#16794c;">0.771</span></div>
+        <div class="corr-row"><span class="corr-label">相生橋通行者 × 売上</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:71.3%;background:#b45309;"></div></div><span class="corr-val" style="color:#b45309;">0.713</span></div>
+        <div class="corr-row"><span class="corr-label">相生橋通行者 × 客数</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:71.2%;background:#b45309;"></div></div><span class="corr-val" style="color:#b45309;">0.712</span></div>
+        <div class="corr-row"><span class="corr-label">⚠ 戎橋周辺通行者 × 売上</span><div class="corr-bar-wrap"><div class="corr-bar" style="width:35.6%;background:#c0392b;"></div></div><span class="corr-val" style="color:#c0392b;">0.356</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 ACTIONS -->
+<section class="a-sec" id="actions" style="background:var(--bg3);">
+  <div class="container fade-in">
+    <div class="section-label">04 — Action Plan</div>
+    <h2 class="section-title">改善施策 11項目</h2>
+    <p class="section-desc">低コスト・高効果から即時着手。秋（9〜11月）の黄金期に全施策を集中投下。経路案内KPI（月4,500件）を週次でモニタリング。</p>
+    <div class="施策-section-head">◎ GBP系（今すぐ・コストほぼゼロ）</div>
+    <div class="施策-grid">
+      <div class="施策-card"><div class="施策-top"><span class="施策-num blue">① 今すぐ</span><span class="施策-name">GBP写真・投稿の週次更新</span></div><div class="施策-desc">月2〜3枚、季節メニュー・外観をスマホで撮影しGBPに投稿。更新頻度がGoogle検索順位に反映。経路案内クリックの基礎底上げに直結。閑散期（12〜3月）の露出底上げ効果が特に大きい。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num blue">② 今すぐ</span><span class="施策-name">口コミ獲得の仕組み化</span></div><div class="施策-desc">会計時QRカード配布＋LINE公式リマインド送信。外国語口コミには外国語で返信。秋（9〜11月）に集中獲得し冬〜春の順位を維持。GBP評価スコア向上→表示頻度増→経路案内増の連鎖。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num blue">③ 今すぐ</span><span class="施策-name">経路案内クリックの週次管理</span></div><div class="施策-desc">目安KPI：月4,500件以上（≒22,000人来客）。4,000件割れで即座に投稿・口コミ強化へ。r=0.932の先行指標で月末着地を高精度予測可能。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num blue">④ コストゼロ</span><span class="施策-name">GBP予約ボタン設定</span></div><div class="施策-desc">現状GBP経由の予約0件。設定コストゼロで機会損失を即時解消。ホットペッパーまたは自社フォームと連携。GBPアクション増→スコア向上→表示頻度向上の好循環。</div></div>
+    </div>
+    <div class="施策-section-head">◎ 広告・デジタル販促</div>
+    <div class="施策-grid">
+      <div class="施策-card"><div class="施策-top"><span class="施策-num amber">⑤ 中期</span><span class="施策-name">Pmax広告テスト</span></div><div class="施策-desc">Google Performance Max広告を道頓堀ビル店で試験導入。経路案内先行KPI（r=0.932）との連動を活用し、広告→経路案内→客数の連鎖を実証。秋（黄金期）前に設定完了が理想。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num amber">⑥ 中期</span><span class="施策-name">7階ダイバーシティ売上向上（インスタ・LP）</span></div><div class="施策-desc">7階フロアを独立コンテンツとして訴求。インスタグラムでのビジュアル発信とLPを整備し、グループ・宴会需要を掘り起こす。ダイバーシティ特化の集客動線を構築。</div></div>
+    </div>
+    <div class="施策-section-head">◎ 体験・コンテンツ・ファサード強化</div>
+    <div class="施策-grid">
+      <div class="施策-card"><div class="施策-top"><span class="施策-num green">⑦ 来店強化</span><span class="施策-name">ファサード改善</span></div><div class="施策-desc">相生橋転換率が2026年4月1.76%と最低値。外観・看板の視認性改善が来店転換率の直接向上につながる。平常値1.85〜2.15%の回復が目標。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num green">⑧ 来店強化</span><span class="施策-name">着ぐるみ（外観誘客）</span></div><div class="施策-desc">ビル前でのマスコット着ぐるみによる声がけ・写真撮影対応。相生橋転換率の底上げ＋SNS拡散効果。インバウンド客へのアピール度が高い。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num green">⑨ 来店強化</span><span class="施策-name">フォトフレーム設置</span></div><div class="施策-desc">道頓堀らしいフォトスポットをビル内外に設置。SNS投稿促進→口コミ増→GBP評価向上→経路案内増のサイクルを形成。インバウンド・若年層に特に有効。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num green">⑩ 体験</span><span class="施策-name">お好み焼体験教室の露出強化</span></div><div class="施策-desc">GBP投稿・インスタ・LP（chibo-official.github.io/okonomiyaki-lp/）で積極発信。体験参加者のGBP口コミ誘導も組み合わせ、閑散期の集客装置として活用。</div></div>
+      <div class="施策-card"><div class="施策-top"><span class="施策-num green">⑪ 体験</span><span class="施策-name">マヨビーム以外のキラーコンテンツ開発</span></div><div class="施策-desc">夏の閲覧転換不全（12.9%）を改善するため、インバウンドが「来る理由」となる体験型コンテンツを追加開発。SNS拡散力の高い映像コンテンツ・参加型体験が望ましい。</div></div>
+    </div>
+    <div style="margin-top:28px;text-align:center;">
+      <button class="btn-primary" style="font-size:14px;padding:12px 28px;" onclick="showPage('project',document.querySelectorAll('.gnav-tab')[1])">▶ 改善プロジェクト管理へ →</button>
+    </div>
+  </div>
+</section>
+
+<footer style="background:var(--text);color:rgba(255,255,255,.5);padding:32px;text-align:center;font-family:var(--font-mono);font-size:11px;line-height:2;">
+  千房ホールディングス株式会社｜営業推進本部｜社内限定資料<br>
+  作成：小山 佳昭（営業推進本部 本部長）｜分析期間：2024年4月〜2026年4月
+</footer>
+</div><!-- /page-analysis -->
+
+
+<!-- ════════════════════════════════════════
+     PAGE B: 改善プロジェクト管理
+════════════════════════════════════════ -->
+<div class="page" id="page-project">
+<div class="proj-main">
+
+  <div class="sub-tab-nav">
+    <button class="sub-tab-btn active" onclick="switchSubTab('review',this)">① 施策レビュー</button>
+    <button class="sub-tab-btn" onclick="switchSubTab('gantt',this)">② ガントチャート</button>
+    <button class="sub-tab-btn" onclick="switchSubTab('mtg',this)">③ MTGサマリー・議事録</button>
+  </div>
+
+  <!-- SUB: REVIEW -->
+  <div class="sub-pane active" id="sub-review">
+    <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+      <button class="btn-secondary" onclick="setAllStatus('go')">✓ 全項目「やる」</button>
+      <button class="btn-secondary" onclick="setAllStatus('pending')">保留に戻す</button>
+    </div>
+    <div class="summary-row">
+      <div class="sum-card s-total"><div class="num" id="sum-total">11</div><div class="lbl">施策合計</div></div>
+      <div class="sum-card s-go"><div class="num" id="sum-go">0</div><div class="lbl">やる ✓</div></div>
+      <div class="sum-card s-nogo"><div class="num" id="sum-nogo">0</div><div class="lbl">やらない</div></div>
+      <div class="sum-card s-pending"><div class="num" id="sum-pending">11</div><div class="lbl">未決定</div></div>
+    </div>
+    <div id="actions-container"></div>
+    <div class="add-section">
+      <h3>＋ 施策を追加する</h3>
+      <div class="add-grid">
+        <div class="full"><label>施策名</label><input type="text" id="new-title" placeholder="例：ランチタイム集客強化"></div>
+        <div class="full"><label>詳細・内容</label><textarea id="new-desc" placeholder="具体的な内容を入力..."></textarea></div>
+        <div><label>カテゴリ</label><select id="new-cat"><option value="GBP系">GBP系（今すぐ）</option><option value="広告・デジタル">広告・デジタル販促</option><option value="体験・ファサード">体験・コンテンツ・ファサード</option><option value="その他">その他</option></select></div>
+        <div><label>優先度</label><select id="new-priority"><option value="immediate">今すぐ（コストほぼゼロ）</option><option value="medium">中期（数週間以内）</option><option value="long">中長期（秋以降）</option></select></div>
+      </div>
+      <button class="btn-primary" onclick="addAction()">追加する</button>
+    </div>
+  </div>
+
+  <!-- SUB: GANTT -->
+  <div class="sub-pane" id="sub-gantt">
+    <div class="gantt-controls">
+      <label>表示開始月 <input type="month" id="gantt-start" value="2026-06" onchange="renderGantt()"></label>
+      <label>表示月数 <select id="gantt-months" onchange="renderGantt()"><option value="4">4ヶ月</option><option value="6" selected>6ヶ月</option><option value="9">9ヶ月</option><option value="12">12ヶ月</option></select></label>
+    </div>
+    <div class="gantt-legend">
+      <span class="g-leg"><span class="g-dot" style="background:var(--eni)"></span>今すぐ着手</span>
+      <span class="g-leg"><span class="g-dot" style="background:var(--amber)"></span>中期</span>
+      <span class="g-leg"><span class="g-dot" style="background:var(--blue)"></span>中長期</span>
+      <span class="g-leg"><span class="g-dot" style="background:var(--green)"></span>完了</span>
+      <span class="g-leg"><span class="g-dot" style="background:var(--dim)"></span>保留中</span>
+      <span class="g-leg"><span class="g-dot" style="background:var(--gold);height:12px;width:3px;border-radius:1px;"></span>本日</span>
+    </div>
+    <div class="gantt-wrapper" id="gantt-container"></div>
+    <p style="font-size:11px;color:var(--dim);margin-top:8px;">※「施策レビュー」で「やる」に設定した施策のみ表示。進捗ステータスは各施策の設定から変更できます。</p>
+  </div>
+
+  <!-- SUB: MTG -->
+  <div class="sub-pane" id="sub-mtg">
+    <div class="mtg-toolbar">
+      <button class="btn-primary" onclick="window.print()">🖨 印刷 / PDF保存</button>
+      <button class="btn-secondary" onclick="copyMarkdown()">📋 マークダウンでコピー</button>
+    </div>
+    <div class="mtg-mini-cards">
+      <div class="mtg-mini mt"><div class="n" id="m-total">11</div><div class="l">施策合計</div></div>
+      <div class="mtg-mini mg"><div class="n" id="m-go">0</div><div class="l">やる ✓</div></div>
+      <div class="mtg-mini mn"><div class="n" id="m-nogo">0</div><div class="l">やらない</div></div>
+      <div class="mtg-mini mp"><div class="n" id="m-pending">11</div><div class="l">未決定</div></div>
+    </div>
+    <div id="mtg-summary-container"></div>
+
+    <!-- MINUTES SECTION -->
+    <div class="minutes-section">
+      <div class="minutes-header">
+        <h3>📝 MTG議事録</h3>
+        <button class="btn-primary" onclick="addMinute()">＋ 新規議事録を追加</button>
+      </div>
+      <div class="minutes-list" id="minutes-list"></div>
+      <div class="add-minute-form" id="add-minute-form" style="display:none;">
+        <h4>新規議事録</h4>
+        <div class="am-grid">
+          <div><label>開催日</label><input type="date" id="nm-date" value="2026-06-11"></div>
+          <div><label>タイトル</label><input type="text" id="nm-title" placeholder="例：道頓堀ビル改善PJ 第1回MTG"></div>
+          <div><label>参加者</label><input type="text" id="nm-attendees" placeholder="例：小山、河田、内藤、店長"></div>
+          <div><label>ファシリテーター</label><input type="text" id="nm-facilitator" placeholder="例：小山"></div>
+          <div class="full"><label>議事内容・決定事項</label><textarea id="nm-content" placeholder="・決定内容&#10;・アクションアイテム&#10;・次回確認事項"></textarea></div>
+          <div class="full"><label>次回MTG予定日</label><input type="date" id="nm-next"></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-primary" onclick="saveMinute()">保存する</button>
+          <button class="btn-secondary" onclick="cancelMinute()">キャンセル</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /page-project -->
+
+<script>
+// ════════════════════════
+// GLOBAL NAV
+// ════════════════════════
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.gnav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'project') { renderGantt(); renderMTG(); }
+}
+
+const today = new Date();
+document.getElementById('today-badge').textContent = today.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'});
+
+// ════════════════════════
+// CHART DATA
+// ════════════════════════
+const M25=['21/4','21/5','21/6','21/7','21/8','21/9','21/10','21/11','21/12','22/1','22/2','22/3','22/4','22/5','22/6','22/7','22/8','22/9','22/10','22/11','22/12','23/1','23/2','23/3','23/4'];
+const RC=8;
+const sales=[48732,53206,48869,47998,51132,48524,58971,56287,57553,57284,48977,50586,56696,60526,53164,49658,54835,60951,60322,57448,53674,53237,45581,48604,48898];
+const cogs=[10265,9142,9331,9156,10694,9224,11680,11225,12808,9644,10198,10286,10919,11598,11127,10587,10835,12953,12699,11088,10847,10916,9198,9725,10529];
+const labor=[9715,10314,10001,9684,10377,12267,11472,10872,11085,11240,10291,12463,11284,11622,11615,11534,11818,14595,12002,11493,11206,11714,10624,13453,10714];
+const rent=[5154,5154,5154,5154,5154,5154,5154,5154,8154,8154,8154,8154,8154,8154,8154,8154,8154,8154,8154,8162,8171,8162,8162,8163,8162];
+const profit=[16853,23090,18425,18452,18850,17778,23435,22399,18847,22420,14365,16132,20019,23283,15090,11464,17680,20997,20167,19971,16673,16161,11417,12765,12792];
+const cogsRate=sales.map((s,i)=>+((cogs[i]/s)*100).toFixed(1));
+const laborRate=sales.map((s,i)=>+((labor[i]/s)*100).toFixed(1));
+const allStores=[
+  {n:'千日前本店',s:17785,p:5792,pd:467},{n:'八尾',s:5390,p:-518,pd:-547},
+  {n:'京都アバンティ',s:7845,p:1838,pd:-617},{n:'堺東',s:6748,p:-301,pd:-606},
+  {n:'高槻阪急',s:6538,p:221,pd:-102},{n:'曽根崎',s:6321,p:738,pd:-1131},
+  {n:'恵比寿GP',s:10428,p:327,pd:388},{n:'京阪モール',s:5443,p:614,pd:-153},
+  {n:'ハービス梅田',s:6604,p:-305,pd:-1265},{n:'有楽町BC',s:9688,p:418,pd:-429},
+  {n:'横浜そごう',s:7849,p:-449,pd:-673},{n:'ルミネ立川',s:6325,p:-351,pd:-579},
+  {n:'あべのキューズ',s:7459,p:38,pd:358},{n:'ヨドバシ池袋',s:4700,p:-1030,pd:-811},
+  {n:'JO-TERRACE',s:6247,p:1527,pd:-479},{n:'セレオ八王子',s:4376,p:-587,pd:-862},
+  {n:'ら名古屋',s:6539,p:-1026,pd:-765},{n:'イクスピアリ',s:12215,p:1595,pd:-352},
+  {n:'有明',s:9863,p:-425,pd:-597},{n:'道頓堀ビル',s:48898,p:12792,pd:-6337},
+  {n:'ぷれ南',s:6180,p:142,pd:-768},{n:'ぷれ北',s:9525,p:347,pd:-988},
+  {n:'シェラトン都',s:12208,p:72,pd:-1172},{n:'ホテル日航',s:9348,p:1118,pd:-1097},
+  {n:'大丸心斎橋',s:14327,p:1227,pd:-1731},{n:'琥',s:5481,p:-521,pd:-502},
+  {n:'甲子園',s:4116,p:104,pd:-623},{n:'すみ吉',s:2690,p:-1557,pd:-1070},
+];
+
+Chart.defaults.font.family="'Noto Sans JP',sans-serif";
+Chart.defaults.color='#6b6560';
+const grid='rgba(0,0,0,.06)';
+const tt={backgroundColor:'#fff',borderColor:'#e4dfd5',borderWidth:1,titleColor:'#1a1815',bodyColor:'#6b6560',padding:10};
+const xR={ticks:{font:{size:8},maxRotation:60,autoSkip:false,color:'#a09890'},grid:{color:grid}};
+const yK={ticks:{font:{size:9},color:'#a09890',callback:v=>Math.round(v/1000)+'k'},grid:{color:grid}};
+function mk(id,cfg){return new Chart(document.getElementById(id),cfg);}
+
+const top10=[...allStores].sort((a,b)=>b.p-a.p).slice(0,10);
+mk('c1',{type:'bar',data:{labels:top10.map(s=>s.n),datasets:[{data:top10.map(s=>s.p),backgroundColor:top10.map(s=>s.n==='道頓堀ビル'?'#2563be':s.p>=0?'rgba(22,121,76,.75)':'rgba(192,57,43,.7)'),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>' '+c.raw.toLocaleString()+'千円'}}},scales:{x:{ticks:{font:{size:9},color:'#a09890',callback:v=>Math.round(v/1000)+'k'},grid:{color:grid}},y:{ticks:{font:{size:9},color:'#6b6560'},grid:{color:grid}}}}});
+
+const varD=[...allStores].sort((a,b)=>a.pd-b.pd).slice(0,12);
+mk('c2',{type:'bar',data:{labels:varD.map(s=>s.n),datasets:[{data:varD.map(s=>s.pd),backgroundColor:varD.map(s=>s.n==='道頓堀ビル'?'#2563be':s.pd<0?'rgba(192,57,43,.7)':'rgba(22,121,76,.75)'),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>' '+c.raw.toLocaleString()+'千円'}}},scales:{x:{min:-7200,ticks:{font:{size:9},color:'#a09890',callback:v=>(v>=0?'+':'')+Math.round(v/1000)+'k'},grid:{color:grid}},y:{ticks:{font:{size:9},color:'#6b6560'},grid:{color:grid}}}}});
+
+mk('cbubble',{type:'bubble',data:{datasets:[{data:allStores.map(s=>({x:s.s,y:s.p,r:Math.max(5,Math.sqrt(s.s/65)),name:s.n})),backgroundColor:allStores.map(s=>s.n==='道頓堀ビル'?'rgba(37,99,190,.8)':s.p>=0?'rgba(22,121,76,.65)':'rgba(192,57,43,.6)'),borderColor:allStores.map(s=>s.n==='道頓堀ビル'?'#1d4ed8':s.p>=0?'#14532d':'#7f1d1d'),borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>{const s=allStores[c.dataIndex];return[s.n,'売上: '+s.s.toLocaleString()+'千円','営業利益: '+s.p.toLocaleString()+'千円'];}}}},scales:{x:{min:-2000,max:56000,title:{display:true,text:'売上高（千円）',font:{size:11},color:'#6b6560'},ticks:{font:{size:9},color:'#a09890',callback:v=>Math.round(v/1000)+'k'},grid:{color:grid}},y:{min:-2500,max:15000,title:{display:true,text:'営業利益（千円）',font:{size:11},color:'#6b6560'},ticks:{font:{size:9},color:'#a09890',callback:v=>Math.round(v/1000)+'k'},grid:{color:grid}}}}});
+
+function trendLines(data,c1,c2){return[{data:data.map((v,i)=>i<=RC?v:null),borderColor:c1,backgroundColor:c1+'22',borderWidth:2,pointRadius:2.5,fill:true,tension:.3,spanGaps:false},{data:data.map((v,i)=>i>=RC?v:null),borderColor:c2,backgroundColor:c2+'1a',borderWidth:2.5,pointRadius:2.5,fill:true,tension:.3,spanGaps:false}];}
+const ttC={...tt,callbacks:{label:c=>c.raw!=null?' '+c.raw.toLocaleString()+'千円':null}};
+mk('c3',{type:'line',data:{labels:M25,datasets:trendLines(sales,'#3b82f6','#f97316')},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:ttC},scales:{x:xR,y:yK}}});
+mk('c4',{type:'line',data:{labels:M25,datasets:trendLines(profit,'#16794c','#dc2626')},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:ttC},scales:{x:xR,y:yK}}});
+mk('c5',{type:'bar',data:{labels:M25,datasets:[{type:'bar',data:cogs,backgroundColor:M25.map((_,i)=>i>=RC?'rgba(249,115,22,.6)':'rgba(59,130,246,.5)'),yAxisID:'y'},{type:'line',data:cogsRate,borderColor:'#ea580c',backgroundColor:'transparent',pointRadius:2,borderWidth:1.5,yAxisID:'y2',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>c.datasetIndex===0?c.raw.toLocaleString()+'千円':c.raw+'%'}}},scales:{x:xR,y:yK,y2:{position:'right',ticks:{font:{size:9},color:'#a09890',callback:v=>v+'%'},grid:{display:false}}}}});
+mk('c6',{type:'bar',data:{labels:M25,datasets:[{type:'bar',data:labor,backgroundColor:M25.map((_,i)=>i>=RC?'rgba(22,121,76,.65)':'rgba(22,121,76,.35)'),yAxisID:'y'},{type:'line',data:laborRate,borderColor:'#15803d',backgroundColor:'transparent',pointRadius:2,borderWidth:1.5,yAxisID:'y2',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>c.datasetIndex===0?c.raw.toLocaleString()+'千円':c.raw+'%'}}},scales:{x:xR,y:yK,y2:{position:'right',ticks:{font:{size:9},color:'#a09890',callback:v=>v+'%'},grid:{display:false}}}}});
+mk('c7',{type:'bar',data:{labels:M25,datasets:[{type:'bar',data:rent,backgroundColor:M25.map((_,i)=>i>=RC?'rgba(239,68,68,.65)':'rgba(147,197,253,.8)'),yAxisID:'y'},{type:'line',data:profit,borderColor:'#16794c',backgroundColor:'transparent',pointRadius:2,borderWidth:2,yAxisID:'y2',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>c.raw?.toLocaleString()+'千円'}}},scales:{x:xR,y:{...yK,max:28000},y2:{position:'right',ticks:{font:{size:9},color:'#a09890',callback:v=>Math.round(v/1000)+'k'},grid:{display:false}}}}});
+
+const gM=['25/5','25/6','25/7','25/8','25/9','25/10','25/11','25/12','26/1','26/2','26/3','26/4'];
+const gS=[60.2,52.8,49.6,54.8,61.0,60.4,57.4,53.6,53.2,45.6,48.6,48.9].map(v=>v*1000);
+const gR=[5897,5100,4632,5227,5530,5867,5053,4595,4980,4136,4487,4112];
+const gC=[26664,22701,22077,24881,26132,26523,24856,23447,23630,21517,22929,19919];
+const gU=[2259,2325,2249,2204,2334,2276,2309,2287,2253,2118,2119,2455];
+const xG={ticks:{font:{size:10},color:'#a09890'},grid:{color:grid}};
+mk('c8',{type:'bar',data:{labels:gM,datasets:[{type:'bar',data:gS,backgroundColor:'rgba(59,130,246,.45)',yAxisID:'y'},{type:'line',data:gR,borderColor:'#b45309',backgroundColor:'transparent',pointRadius:4,borderWidth:2,yAxisID:'y2',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>c.datasetIndex===0?Math.round(c.raw/1000)+'k千円':c.raw+'件'}}},scales:{x:xG,y:yK,y2:{position:'right',ticks:{font:{size:9},color:'#a09890'},grid:{display:false}}}}});
+mk('c9',{type:'bar',data:{labels:gM,datasets:[{type:'bar',data:gC,backgroundColor:'rgba(22,121,76,.45)',yAxisID:'y'},{type:'line',data:gU,borderColor:'#b45309',backgroundColor:'transparent',pointRadius:4,borderWidth:2,yAxisID:'y2',tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tt,callbacks:{label:c=>c.datasetIndex===0?c.raw.toLocaleString()+'人':c.raw.toLocaleString()+'円'}}},scales:{x:xG,y:{ticks:{font:{size:9},color:'#a09890'},grid:{color:grid}},y2:{position:'right',ticks:{font:{size:9},color:'#a09890',callback:v=>v.toLocaleString()},grid:{display:false}}}}});
+
+const obs=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting)el.target.classList.add('visible');});},{threshold:.06});
+document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+
+// ════════════════════════
+// PROJECT DATA
+// ════════════════════════
+const MEMBERS=['小山','河田','内藤','冨山','津﨑','松下','伊藤','櫻木','店長','現場スタッフ'];
+const PROG_OPTS=[{v:'not_started',l:'未着手'},{v:'in_progress',l:'進行中'},{v:'done',l:'完了'},{v:'hold',l:'保留中'}];
+const CATS=['GBP系','広告・デジタル','体験・ファサード','その他'];
+const CAT_LABELS={'GBP系':'◎ GBP系（今すぐ・コストほぼゼロ）','広告・デジタル':'◎ 広告・デジタル販促','体験・ファサード':'◎ 体験・コンテンツ・ファサード強化','その他':'◎ その他'};
+
+const defaultActions=[
+  {id:1,num:'①',cat:'GBP系',title:'GBP写真・投稿の週次更新',desc:'月2〜3枚、季節メニュー・外観をスマホ撮影しGBPに投稿。閑散期（12〜3月）の露出底上げ効果が特に大きい。',priority:'immediate',costBadge:'今すぐ・コストほぼゼロ',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:2,num:'②',cat:'GBP系',title:'口コミ獲得の仕組み化',desc:'会計時QRカード配布＋LINE公式リマインド送信。外国語口コミには外国語で返信。秋（9〜11月）集中獲得。',priority:'immediate',costBadge:'今すぐ・コストほぼゼロ',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:3,num:'③',cat:'GBP系',title:'経路案内クリックの週次管理',desc:'目安KPI：月4,500件以上（≒22,000人来客）。4,000件割れで即座に投稿・口コミ強化へ。r=0.932の先行指標。',priority:'immediate',costBadge:'今すぐ・コストほぼゼロ',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:4,num:'④',cat:'GBP系',title:'GBP予約ボタン設定',desc:'現状GBP経由の予約0件。設定コストゼロで機会損失を即時解消。ホットペッパーまたは自社フォームと連携。',priority:'immediate',costBadge:'今すぐ・コストほぼゼロ',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:5,num:'⑤',cat:'広告・デジタル',title:'Pmax広告テスト（Google）',desc:'Google Performance Max広告を道頓堀ビル店で試験導入。秋（黄金期）前に設定完了が理想。',priority:'medium',costBadge:'中期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:6,num:'⑥',cat:'広告・デジタル',title:'7階ダイバーシティ売上向上（インスタ・LP）',desc:'7階フロアを独立コンテンツとして訴求。インスタ発信とLPを整備し、グループ・宴会需要を掘り起こす。',priority:'medium',costBadge:'中期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:7,num:'⑦',cat:'体験・ファサード',title:'ファサード改善（外観・看板）',desc:'相生橋転換率が2026年4月1.76%と最低値。外観・看板の視認性改善で転換率1.85〜2.15%への回復を目標。',priority:'medium',costBadge:'中期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:8,num:'⑧',cat:'体験・ファサード',title:'着ぐるみによる外観誘客',desc:'ビル前でのマスコット着ぐるみによる声がけ・写真撮影対応。相生橋転換率の底上げ＋SNS拡散効果。',priority:'long',costBadge:'中長期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:9,num:'⑨',cat:'体験・ファサード',title:'フォトフレーム・フォトスポット設置',desc:'道頓堀らしいフォトスポットをビル内外に設置。SNS投稿促進→口コミ増→GBP評価向上のサイクル形成。',priority:'long',costBadge:'中長期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:10,num:'⑩',cat:'体験・ファサード',title:'お好み焼体験教室の露出強化',desc:'GBP投稿・インスタ・LPで積極発信。体験参加者のGBP口コミ誘導も組み合わせ、閑散期の集客装置として活用。',priority:'medium',costBadge:'中期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+  {id:11,num:'⑪',cat:'体験・ファサード',title:'キラーコンテンツ開発（夏の転換率改善）',desc:'夏の閲覧転換不全（12.9%）を改善するため、インバウンドが「来る理由」となる体験型コンテンツを追加開発。',priority:'long',costBadge:'中長期',status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''},
+];
+
+let actions=JSON.parse(localStorage.getItem('dtb_actions')||JSON.stringify(defaultActions));
+let minutes=JSON.parse(localStorage.getItem('dtb_minutes')||'[]');
+let nextId=Math.max(...actions.map(a=>a.id),11)+1;
+let nextMid=Math.max(...(minutes.map(m=>m.id)||[0]),0)+1;
+
+function save(){localStorage.setItem('dtb_actions',JSON.stringify(actions));}
+function saveM(){localStorage.setItem('dtb_minutes',JSON.stringify(minutes));}
+
+// Sub tabs
+function switchSubTab(id,btn){
+  document.querySelectorAll('.sub-tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.sub-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sub-'+id).classList.add('active');
+  if(id==='gantt')renderGantt();
+  if(id==='mtg')renderMTG();
+}
+
+// ════════ RENDER ACTIONS ════════
+const PROG_MAP={not_started:{l:'未着手',cls:'prog-not-started'},in_progress:{l:'進行中',cls:'prog-in-progress'},done:{l:'完了',cls:'prog-done'},hold:{l:'保留中',cls:'prog-hold'}};
+
+function renderActions(){
+  const c=document.getElementById('actions-container');c.innerHTML='';
+  CATS.forEach(cat=>{
+    const items=actions.filter(a=>a.cat===cat);
+    if(!items.length)return;
+    const sec=document.createElement('div');sec.className='cat-section';
+    const goC=items.filter(a=>a.status==='go').length;
+    sec.innerHTML=`<div class="cat-header"><span class="cat-label">${CAT_LABELS[cat]||cat}</span><span class="cat-count">${goC}/${items.length} やる</span></div>`;
+    items.forEach(a=>sec.appendChild(buildCard(a)));
+    c.appendChild(sec);
+  });
+  updateSummary();
+}
+
+function buildCard(a){
+  const card=document.createElement('div');
+  card.className=`action-card ${a.status}`;
+  card.id=`card-${a.id}`;
+  const pb=a.priority==='immediate'?`<span class="badge badge-imm">${a.costBadge}</span>`:a.priority==='medium'?`<span class="badge badge-med">${a.costBadge}</span>`:`<span class="badge" style="background:#eff6ff;color:#1d4ed8;">${a.costBadge}</span>`;
+  const pg=PROG_MAP[a.progress||'not_started'];
+  const isOpen=a.status==='go';
+  card.innerHTML=`
+    <div class="card-top">
+      <span class="card-num">${a.num||''}</span>
+      <div class="card-title-block">
+        <div class="card-title">${a.title}</div>
+        <div class="card-desc">${a.desc}</div>
+        <div class="card-meta">
+          ${pb}
+          ${a.status==='go'?`<span class="prog-badge ${pg.cls}">${pg.l}</span>`:''}
+          ${a.status==='go'&&a.leader?`<span class="badge" style="background:#f0f5fc;color:#1565c0;">👤 ${a.leader}</span>`:''}
+          ${a.status==='go'&&a.endDate?`<span class="badge" style="background:#fdf8ee;color:#7a5c00;">📅 〜${a.endDate}</span>`:''}
+        </div>
+      </div>
+      <div class="card-controls">
+        <button class="status-btn btn-go ${a.status==='go'?'active':''}" onclick="setStatus(${a.id},'go')">✓ やる</button>
+        <button class="status-btn btn-nogo ${a.status==='nogo'?'active':''}" onclick="setStatus(${a.id},'nogo')">✗ やらない</button>
+        <button class="expand-btn ${isOpen?'open':''}" id="exp-${a.id}" onclick="toggleDetail(${a.id})">▾</button>
+      </div>
+    </div>
+    <div class="card-detail ${isOpen?'open':''}" id="det-${a.id}">
+      <div class="detail-grid">
+        <div class="detail-field"><label>リーダー</label>
+          <select onchange="updateField(${a.id},'leader',this.value)">
+            <option value="">— 選択 —</option>
+            ${MEMBERS.map(m=>`<option value="${m}" ${a.leader===m?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        <div class="detail-field"><label>開始日</label><input type="date" value="${a.startDate}" onchange="updateField(${a.id},'startDate',this.value)"></div>
+        <div class="detail-field"><label>完了期限</label><input type="date" value="${a.endDate}" onchange="updateField(${a.id},'endDate',this.value)"></div>
+        <div class="detail-field"><label>進捗ステータス</label>
+          <select onchange="updateField(${a.id},'progress',this.value)">
+            ${PROG_OPTS.map(o=>`<option value="${o.v}" ${(a.progress||'not_started')===o.v?'selected':''}>${o.l}</option>`).join('')}
+          </select>
+        </div>
+        <div class="detail-field full"><label>備考・メモ</label><textarea onchange="updateField(${a.id},'note',this.value)" placeholder="具体的なアクション、懸念点など...">${a.note}</textarea></div>
+      </div>
+      ${a.id>11?`<button class="btn-delete" onclick="deleteAction(${a.id})">この施策を削除</button>`:''}
+    </div>`;
+  return card;
+}
+
+function toggleDetail(id){
+  document.getElementById(`det-${id}`).classList.toggle('open');
+  document.getElementById(`exp-${id}`).classList.toggle('open');
+}
+function setStatus(id,st){
+  const a=actions.find(a=>a.id===id);
+  a.status=a.status===st?'pending':st;
+  if(a.status==='go'&&!a.startDate)a.startDate=new Date().toISOString().split('T')[0];
+  save();renderActions();
+}
+function updateField(id,f,v){
+  const a=actions.find(a=>a.id===id);a[f]=v;save();renderActions();
+}
+function updateSummary(){
+  const go=actions.filter(a=>a.status==='go').length;
+  const no=actions.filter(a=>a.status==='nogo').length;
+  const pe=actions.filter(a=>a.status==='pending').length;
+  ['sum-total','m-total'].forEach(i=>document.getElementById(i).textContent=actions.length);
+  ['sum-go','m-go'].forEach(i=>document.getElementById(i).textContent=go);
+  ['sum-nogo','m-nogo'].forEach(i=>document.getElementById(i).textContent=no);
+  ['sum-pending','m-pending'].forEach(i=>document.getElementById(i).textContent=pe);
+}
+function setAllStatus(st){actions.forEach(a=>{a.status=st;if(st==='go'&&!a.startDate)a.startDate=new Date().toISOString().split('T')[0];});save();renderActions();}
+function addAction(){
+  const title=document.getElementById('new-title').value.trim();
+  if(!title){alert('施策名を入力してください');return;}
+  const newA={id:nextId++,num:`追${nextId-12}`,cat:document.getElementById('new-cat').value,title,desc:document.getElementById('new-desc').value.trim(),priority:document.getElementById('new-priority').value,costBadge:{immediate:'今すぐ・コストほぼゼロ',medium:'中期',long:'中長期'}[document.getElementById('new-priority').value],status:'pending',progress:'not_started',leader:'',startDate:'',endDate:'',note:''};
+  actions.push(newA);
+  document.getElementById('new-title').value='';document.getElementById('new-desc').value='';
+  save();renderActions();
+}
+function deleteAction(id){if(!confirm('削除しますか？'))return;actions=actions.filter(a=>a.id!==id);save();renderActions();}
+
+// ════════ GANTT ════════
+function renderGantt(){
+  const container=document.getElementById('gantt-container');
+  const startVal=document.getElementById('gantt-start').value;
+  const numM=parseInt(document.getElementById('gantt-months').value);
+  const startDate=new Date(startVal+'-01');
+  const months=[];
+  for(let i=0;i<numM;i++){const d=new Date(startDate);d.setMonth(d.getMonth()+i);months.push({m:d.getMonth()+1,y:d.getFullYear(),d});}
+  const endDate=new Date(startDate);endDate.setMonth(endDate.getMonth()+numM);
+  const rangeMs=endDate-startDate;
+  const todayPct=Math.max(0,Math.min(100,((today-startDate)/rangeMs)*100)).toFixed(2);
+  const goActions=actions.filter(a=>a.status==='go');
+  const catGroups={};CATS.forEach(c=>{catGroups[c]=goActions.filter(a=>a.cat===c);});
+
+  let html=`<div class="gantt-head-row"><div class="g-label-col">施策・担当・ステータス</div><div class="g-months">${months.map(m=>`<div class="g-month">${m.m}月</div>`).join('')}</div></div>`;
+
+  if(!goActions.length){html+=`<div style="padding:32px;text-align:center;color:var(--dim);font-size:13px;">「施策レビュー」タブで「やる」に設定した施策がここに表示されます</div>`;container.innerHTML=html;return;}
+
+  CATS.forEach(cat=>{
+    const items=catGroups[cat];if(!items||!items.length)return;
+    html+=`<div class="g-sec-head">${CAT_LABELS[cat]||cat}</div>`;
+    items.forEach(a=>{
+      const pg=PROG_MAP[a.progress||'not_started'];
+      let barHtml='';
+      if(a.startDate&&a.endDate){
+        const s=new Date(a.startDate),e=new Date(a.endDate);
+        const left=Math.max(0,((s-startDate)/rangeMs)*100);
+        const right=Math.min(100,((e-startDate)/rangeMs)*100);
+        const w=Math.max(0,right-left);
+        if(w>0){
+          const isDone=a.progress==='done';
+          const isHold=a.progress==='hold';
+          const colorCls=isDone?'done':isHold?'hold':a.priority==='immediate'?'imm':a.priority==='medium'?'med':'lng';
+          const label=a.title.length>8?a.title.substring(0,8)+'…':a.title;
+          barHtml=`<div class="g-bar ${colorCls}" style="left:${left.toFixed(1)}%;width:${w.toFixed(1)}%" title="${a.title}｜${a.leader||'—'}｜${pg.l}">${label}</div>`;
+        }
+      }
+      html+=`<div class="gantt-row">
+        <div class="g-task-label">
+          <div class="g-task-name" title="${a.title}">${a.num} ${a.title}</div>
+          <div class="g-task-leader">${a.leader||'（未設定）'}</div>
+          <div class="g-task-status"><span class="prog-badge ${pg.cls}">${pg.l}</span></div>
+        </div>
+        <div class="g-bar-area">
+          ${barHtml}
+          <div class="g-today" style="left:${todayPct}%"></div>
+        </div>
+      </div>`;
+    });
+  });
+  container.innerHTML=html;
+}
+
+// ════════ MTG SUMMARY ════════
+function renderMTG(){
+  updateSummary();
+  const go=actions.filter(a=>a.status==='go');
+  const nogo=actions.filter(a=>a.status==='nogo');
+  const pending=actions.filter(a=>a.status==='pending');
+  let html='';
+  if(go.length){
+    html+=`<div style="margin-bottom:8px;font-size:13px;font-weight:700;color:var(--text)">決定施策（やる：${go.length}件）</div>
+    <table class="mtg-table" style="margin-bottom:22px;"><thead><tr><th style="width:28px;">#</th><th>施策名</th><th style="width:80px;">リーダー</th><th style="width:90px;">期限</th><th style="width:90px;">進捗</th><th>備考</th></tr></thead><tbody>
+    ${go.map(a=>{const pg=PROG_MAP[a.progress||'not_started'];return`<tr><td style="color:var(--dim);font-size:11px;">${a.num}</td><td style="font-weight:500;">${a.title}</td><td><span style="font-size:11px;background:var(--blue-light);color:var(--blue);padding:2px 7px;border-radius:8px;">${a.leader||'—'}</span></td><td style="font-size:12px;">${a.endDate||'—'}</td><td><span class="prog-badge ${pg.cls}">${pg.l}</span></td><td style="font-size:12px;color:var(--muted);">${a.note||'—'}</td></tr>`;}).join('')}
+    </tbody></table>`;
+  }
+  if(nogo.length){
+    html+=`<div style="margin-bottom:8px;font-size:13px;font-weight:700;color:var(--text)">見送り施策（${nogo.length}件）</div>
+    <table class="mtg-table" style="margin-bottom:22px;"><thead><tr><th>#</th><th>施策名</th><th>備考</th></tr></thead><tbody>
+    ${nogo.map(a=>`<tr><td style="color:var(--dim);font-size:11px;">${a.num}</td><td>${a.title}</td><td style="font-size:12px;color:var(--muted);">${a.note||'—'}</td></tr>`).join('')}
+    </tbody></table>`;
+  }
+  if(pending.length){
+    html+=`<div style="margin-bottom:8px;font-size:13px;font-weight:700;color:var(--amber)">継続検討（${pending.length}件）</div>
+    <table class="mtg-table" style="margin-bottom:22px;"><thead><tr><th>#</th><th>施策名</th><th>次回検討事項</th></tr></thead><tbody>
+    ${pending.map(a=>`<tr><td style="color:var(--dim);font-size:11px;">${a.num}</td><td>${a.title}</td><td style="font-size:12px;color:var(--muted);">${a.note||'次回MTGで検討'}</td></tr>`).join('')}
+    </tbody></table>`;
+  }
+  if(!go.length&&!nogo.length&&!pending.length)html='<p style="color:var(--dim);font-size:13px;">施策が登録されていません。</p>';
+  html+=`<div style="background:var(--eni-light);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--muted);border-left:3px solid var(--eni);margin-top:4px;"><strong style="color:var(--eni)">次回モニタリング目安</strong>：GBP経路案内クリック数（週次）、相生橋転換率（月次）、口コミ件数（月次）<br>KPI目安：経路案内 月4,500件以上 ／ 転換率 1.85〜2.15%回復を目標</div>`;
+  document.getElementById('mtg-summary-container').innerHTML=html;
+  renderMinutes();
+}
+
+// ════════ MINUTES ════════
+function renderMinutes(){
+  const list=document.getElementById('minutes-list');
+  if(!minutes.length){list.innerHTML='<p style="color:var(--dim);font-size:13px;padding:12px 0;">まだ議事録がありません。「新規議事録を追加」から記録してください。</p>';return;}
+  list.innerHTML='';
+  [...minutes].reverse().forEach((m,idx)=>{
+    const card=document.createElement('div');card.className='minute-card';card.id=`mc-${m.id}`;
+    card.innerHTML=`
+      <div class="minute-card-head" onclick="toggleMinute(${m.id})">
+        <span class="minute-num">No.${String(minutes.indexOf(m)+1).padStart(2,'0')}</span>
+        <span class="minute-date">${m.date||'—'}</span>
+        <span class="minute-title-text">${m.title||'（タイトルなし）'}</span>
+        <span style="font-size:11px;color:var(--dim);white-space:nowrap;">${m.attendees?'👥 '+m.attendees:''}</span>
+        <button class="minute-expand" id="me-${m.id}">▾</button>
+      </div>
+      <div class="minute-body" id="mb-${m.id}">
+        <div class="minute-body-grid">
+          <div class="minute-field"><label>開催日</label><input type="date" value="${m.date}" onchange="updateMinute(${m.id},'date',this.value)"></div>
+          <div class="minute-field"><label>タイトル</label><input type="text" value="${m.title}" onchange="updateMinute(${m.id},'title',this.value)"></div>
+          <div class="minute-field"><label>参加者</label><input type="text" value="${m.attendees}" placeholder="小山、河田、店長…" onchange="updateMinute(${m.id},'attendees',this.value)"></div>
+          <div class="minute-field"><label>ファシリテーター</label><input type="text" value="${m.facilitator}" onchange="updateMinute(${m.id},'facilitator',this.value)"></div>
+          <div class="minute-field full"><label>議事内容・決定事項</label><textarea rows="6" onchange="updateMinute(${m.id},'content',this.value)">${m.content}</textarea></div>
+          <div class="minute-field"><label>次回MTG予定日</label><input type="date" value="${m.next}" onchange="updateMinute(${m.id},'next',this.value)"></div>
+        </div>
+        <div class="minute-actions">
+          <button class="btn-minute-del" onclick="deleteMinute(${m.id})">この議事録を削除</button>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function toggleMinute(id){
+  document.getElementById(`mb-${id}`).classList.toggle('open');
+  document.getElementById(`me-${id}`).classList.toggle('open');
+}
+function updateMinute(id,f,v){const m=minutes.find(m=>m.id===id);m[f]=v;saveM();renderMinutes();}
+function deleteMinute(id){if(!confirm('この議事録を削除しますか？'))return;minutes=minutes.filter(m=>m.id!==id);saveM();renderMinutes();}
+
+function addMinute(){document.getElementById('add-minute-form').style.display='block';}
+function cancelMinute(){document.getElementById('add-minute-form').style.display='none';}
+function saveMinute(){
+  const date=document.getElementById('nm-date').value;
+  const title=document.getElementById('nm-title').value.trim();
+  if(!title){alert('タイトルを入力してください');return;}
+  minutes.push({id:nextMid++,date,title,attendees:document.getElementById('nm-attendees').value.trim(),facilitator:document.getElementById('nm-facilitator').value.trim(),content:document.getElementById('nm-content').value.trim(),next:document.getElementById('nm-next').value});
+  saveM();
+  document.getElementById('add-minute-form').style.display='none';
+  ['nm-title','nm-attendees','nm-facilitator','nm-content','nm-next'].forEach(i=>document.getElementById(i).value='');
+  renderMinutes();
+}
+
+function copyMarkdown(){
+  const go=actions.filter(a=>a.status==='go');
+  const d=today.toLocaleDateString('ja-JP');
+  let md=`# 道頓堀ビル 改善プロジェクト MTGサマリー\n日付：${d}\n\n## 決定施策（${go.length}件）\n\n|#|施策名|リーダー|完了期限|進捗|備考|\n|---|---|---|---|---|---|\n`;
+  go.forEach(a=>{const pg=PROG_MAP[a.progress||'not_started'];md+=`|${a.num}|${a.title}|${a.leader||'—'}|${a.endDate||'—'}|${pg.l}|${a.note||'—'}|\n`;});
+  if(minutes.length){md+=`\n## 議事録一覧\n\n`;minutes.forEach(m=>{md+=`### ${m.date} ${m.title}\n参加者：${m.attendees||'—'}　ファシリテーター：${m.facilitator||'—'}\n\n${m.content||''}\n\n次回：${m.next||'—'}\n\n---\n\n`;});}
+  navigator.clipboard.writeText(md).then(()=>alert('マークダウンをクリップボードにコピーしました'));
+}
+
+// Init
+renderActions();
+</script>
+</body>
+</html>
